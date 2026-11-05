@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>アヴァロン・クロニクル 〜失われし大地〜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Shippori+Mincho:wght@600;800&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <!-- ======================= HUD ======================= -->
+  <div id="hud" class="hidden">
+    <div class="hud-topleft">
+      <div class="portrait">
+        <div class="portrait-inner" id="portrait-face">勇</div>
+        <div class="portrait-level"><span id="level-text">1</span></div>
+      </div>
+      <div class="bars">
+        <div class="bar bar-hp">
+          <div class="bar-fill" id="hp-bar"></div>
+          <div class="bar-label"><span class="bar-ico">❤</span><span id="hp-text">100 / 100</span></div>
+        </div>
+        <div class="bar bar-mp">
+          <div class="bar-fill" id="mp-bar"></div>
+          <div class="bar-label"><span class="bar-ico">✦</span><span id="mp-text">60 / 60</span></div>
+        </div>
+        <div class="bar bar-stam">
+          <div class="bar-fill" id="stam-bar"></div>
+          <div class="bar-label"><span class="bar-ico">⚡</span></div>
+        </div>
+        <div class="bar bar-xp">
+          <div class="bar-fill" id="xp-bar"></div>
+          <div class="bar-label"><span id="xp-text">EXP 0 / 100</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-topright">
+      <div class="minimap-wrap">
+        <canvas id="minimap" width="180" height="180"></canvas>
+        <div class="minimap-ring"></div>
+        <div class="minimap-n">N</div>
+      </div>
+      <div class="clock">
+        <span id="clock-icon">☀</span>
+        <span id="clock-text">06:00</span>
+        <span id="phase-text">昼</span>
+      </div>
+      <div class="gold"><span>◈</span> <span id="gold-text">0</span></div>
+      <div class="bgm-chip" id="bgm-chip" title="M でミュート / [ ] で音量">
+        <span class="bgm-note">♪</span>
+        <span class="bgm-name" id="bgm-name">風の大地をゆく</span>
+        <span class="bgm-vol" id="bgm-vol">45%</span>
+      </div>
+    </div>
+
+    <div id="quest-tracker" class="quest-tracker"></div>
+    <div id="combat-log" class="combat-log"></div>
+
+    <div class="hotbar" id="hotbar">
+      <div class="slot" data-skill="0"><span class="key">1</span><span class="ico">🗡</span><span class="nm">斬撃</span><div class="cd" data-cd="0"></div></div>
+      <div class="slot" data-skill="1"><span class="key">2</span><span class="ico">🔥</span><span class="nm">火球</span><div class="cd" data-cd="1"></div></div>
+      <div class="slot" data-skill="2"><span class="key">3</span><span class="ico">✨</span><span class="nm">治癒</span><div class="cd" data-cd="2"></div></div>
+      <div class="slot" data-skill="3"><span class="key">4</span><span class="ico">🌀</span><span class="nm">旋風斬</span><div class="cd" data-cd="3"></div></div>
+      <div class="slot" data-skill="4"><span class="key">5</span><span class="ico">🛡</span><span class="nm">鉄壁</span><div class="cd" data-cd="4"></div></div>
+    </div>
+
+    <div id="interact-prompt" class="interact-prompt hidden"><b>E</b><span id="interact-label">話す</span></div>
+    <div id="crosshair" class="crosshair"></div>
+    <div id="notifications" class="notifications"></div>
+    <div id="damage-layer" class="damage-layer"></div>
+
+    <div id="boss-bar" class="boss-bar hidden">
+      <div class="boss-name" id="boss-name">古代竜ヴァルガ</div>
+      <div class="boss-track"><div class="boss-fill" id="boss-fill"></div></div>
+    </div>
+
+    <div class="hint" id="hint">WASD 移動 ／ クリック 攻撃 ／ 1-5 スキル ／ Shift 疾走 ／ Space ジャンプ ／ E 調べる ／ I 持ち物 ／ Q クエスト ／ M BGM ／ Esc メニュー</div>
+  </div>
+
+  <div id="hurt-flash" class="hurt-flash"></div>
+  <div id="levelup-flash" class="levelup-flash"><div class="lvl-text">LEVEL UP!</div></div>
+
+  <!-- ======================= DIALOGUE ======================= -->
+  <div id="dialogue" class="dialogue hidden">
+    <div class="dlg-box">
+      <div class="dlg-portrait" id="dlg-face">🧝</div>
+      <div class="dlg-main">
+        <div class="dlg-name" id="dlg-name">エルダ</div>
+        <div class="dlg-text" id="dlg-text"></div>
+        <div class="dlg-options" id="dlg-options"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= PANELS ======================= -->
+  <div id="inventory" class="panel hidden">
+    <div class="panel-head"><h2>持ち物</h2><button class="close" data-close="inventory">✕</button></div>
+    <div class="panel-body">
+      <div class="inv-left">
+        <div class="inv-grid" id="inv-grid"></div>
+      </div>
+      <div class="inv-right">
+        <h3>装備</h3>
+        <div class="equip-row"><span class="eq-label">武器</span><span class="eq-val" id="eq-weapon">旅人の剣</span></div>
+        <div class="equip-row"><span class="eq-label">防具</span><span class="eq-val" id="eq-armor">布の服</span></div>
+        <h3>能力</h3>
+        <div class="stats" id="inv-stats"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="questlog" class="panel hidden">
+    <div class="panel-head"><h2>クエスト</h2><button class="close" data-close="questlog">✕</button></div>
+    <div class="panel-body"><div class="quest-list" id="quest-list"></div></div>
+  </div>
+
+  <div id="pause" class="panel hidden">
+    <div class="panel-head"><h2>メニュー</h2></div>
+    <div class="panel-body pause-body">
+      <button class="menu-btn" data-action="resume">冒険を続ける</button>
+      <button class="menu-btn" data-action="save">セーブする</button>
+      <button class="menu-btn" data-action="inventory">持ち物</button>
+      <button class="menu-btn" data-action="questlog">クエスト</button>
+      <button class="menu-btn danger" data-action="title">タイトルへ戻る</button>
+      <div class="pause-stats" id="pause-stats"></div>
+    </div>
+  </div>
+
+  <div id="death" class="panel death hidden">
+    <div class="death-inner">
+      <h1>力尽きた……</h1>
+      <p id="death-stats"></p>
+      <button class="menu-btn" id="btn-respawn">教会で目を覚ます</button>
+    </div>
+  </div>
+
+  <!-- ======================= TITLE ======================= -->
+  <div id="title" class="title">
+    <div class="title-bg"></div>
+    <div class="title-inner">
+      <div class="title-sub">A REAL-TIME 3D ACTION RPG</div>
+      <h1 class="title-name">アヴァロン・クロニクル</h1>
+      <div class="title-sub2">〜 失われし大地 〜</div>
+      <div class="title-buttons">
+        <button class="menu-btn primary" id="btn-new">新たな冒険</button>
+        <button class="menu-btn" id="btn-continue">続きから</button>
+        <button class="menu-btn" id="btn-howto">遊び方</button>
+      </div>
+      <div class="title-foot">three.js による手続き生成ワールド ／ WASD + マウス</div>
+    </div>
+  </div>
+
+  <div id="howto" class="panel hidden">
+    <div class="panel-head"><h2>遊び方</h2><button class="close" data-close="howto">✕</button></div>
+    <div class="panel-body howto-body">
+      <div class="howto-cols">
+        <div>
+          <h3>操作</h3>
+          <ul>
+            <li><b>W A S D</b> 移動</li>
+            <li><b>マウス</b> 視点</li>
+            <li><b>左クリック</b> 攻撃</li>
+            <li><b>右クリック</b> 回避ロール</li>
+            <li><b>Shift</b> 疾走（スタミナ）</li>
+            <li><b>Space</b> ジャンプ</li>
+            <li><b>1〜5</b> スキル発動</li>
+            <li><b>E</b> 話す／調べる</li>
+            <li><b>F</b> 拾う</li>
+            <li><b>M</b> BGM ミュート / <b>[ ]</b> 音量</li>
+            <li><b>I / Q / Esc</b> 各画面</li>
+          </ul>
+        </div>
+        <div>
+          <h3>目的</h3>
+          <ul>
+            <li>村のエルダからクエストを受けよう</li>
+            <li>魔物を倒して経験値とゴールドを得る</li>
+            <li>レベルを上げ、装備を整える</li>
+            <li>夜は強敵が増える。焚き火で身を守れ</li>
+            <li>Lv15 で古代竜ヴァルガが目覚める</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading" class="loading">
+    <div class="loading-inner">
+      <div class="loading-title">世界を生成しています</div>
+      <div class="loading-track"><div class="loading-bar" id="loading-bar"></div></div>
+      <div class="loading-step" id="loading-step">地形</div>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/build/three.module.js",
+    "three/addons/": "./vendor/three/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

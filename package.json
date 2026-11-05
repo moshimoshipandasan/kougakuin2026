@@ -1,0 +1,13 @@
+{
+  "name": "avalon-chronicle",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "three.js 製の 3D アクション RPG（手続き生成ワールド）",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["three.js", "webgl", "rpg", "game"],
+  "license": "MIT"
+}
