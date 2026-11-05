@@ -3,7 +3,13 @@
 **three.js** だけで作った、手続き生成ワールドの 3D アクション RPG です。
 画像・モデル・効果音はすべて実行時にコードで生成しているので、外部アセットは BGM の mp3 だけです。
 
-![title](docs/preview-vista.png)
+![keyvisual](assets/images/title-key-visual.jpg)
+
+*▲ タイトル画面のキービジュアル（生成画像）。実際のゲーム内の映像は下のスクリーンショットです。*
+
+## スクリーンショット
+
+![vista](docs/preview-vista.png)
 
 *▲ 手続き生成された大地・海・森。時間帯によって光と影が移ろいます。*
 
@@ -89,10 +95,11 @@ python3 -m http.server 8080
 
 ```
 index.html            画面・HUD・各UIパネル
-css/style.css         ファンタジー風のスタイル
+css/style.css         ファンタジー風のスタイル（タイトル画面のキービジュアル背景を含む）
 server.js             依存ゼロの静的サーバ（Range対応 / 音声シーク用）
 vendor/three/         three.js r160（ローカル同梱・オフライン動作可）
 assets/bgm/           BGM
+assets/images/        タイトル画面のキービジュアル
 
 js/
   main.js             エントリポイント
@@ -129,8 +136,17 @@ js/
 
 ---
 
+## タイトル画面のキービジュアル
+
+`assets/images/title-key-visual.jpg` をタイトル画面の背景に使用しています（`css/style.css` の `--title-art` 変数で差し替え可能）。
+
+- 画像が無い／読み込めない環境では、従来の CSS グラデーション背景に自動でフォールバックします
+- ゆっくり拡大するケンバーンズ風アニメーションと、周囲を暗くするグラデーションオーバーレイで、金色のタイトル文字が読みやすいようにしています
+- 差し替えるときは同パスに画像を置き換えるだけです（推奨: 16:9・横 1600px 以上）
+
 ## ライセンス
 
 - コード: MIT
 - three.js: MIT（`vendor/three/LICENSE`）
 - BGM: 各自の権利に従ってください
+- キービジュアル: このプロジェクト用に生成した画像
